@@ -1,6 +1,11 @@
 # ece49595nl-GloVe
 This repository is purely focused on implementation
 
+## Requirements
+
+RocksDB
+
+## Usage
 
 ## Procedure
 
@@ -38,9 +43,9 @@ R = number of rounds
 |                           |               |
 
 
-## Weighting Function Details
+## Cost Function Details
 
-### Weighting function dimensionality
+### Cost function dimensionality
 
 $
 J = \sum\limits_{i,j=1}^{V} 
@@ -97,6 +102,8 @@ $
 Given a known $x_{max}$ and $0 < \alpha < 1$.
 
 Our implementation will use this suggested function to begin with.
+
+### Bias terms
 
 ## Implementation
 
