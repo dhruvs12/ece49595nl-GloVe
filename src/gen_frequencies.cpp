@@ -15,7 +15,8 @@ int main(int argc, char **argv) {
     std::ifstream infile (argv[1]);
     
     if (!infile.is_open()) {
-        std::cerr << "Corpus not read properly. exiting...\n";
+        std::cerr << "Corpus not read properly. Exiting...\n";
+        return EXIT_FAILURE;
     }
 
     std::string word;
@@ -26,7 +27,8 @@ int main(int argc, char **argv) {
     std::ofstream outfile (argv[2]);
 
     if (!outfile.is_open()) {
-        std::cerr << "Output not opened properly. exiting...\n";
+        std::cerr << "Output not opened properly. Exiting...\n";
+        return EXIT_FAILURE;
     }
 
     int min_count = atoi(argv[3]);

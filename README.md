@@ -3,7 +3,6 @@ This repository is purely focused on implementation
 
 ## Requirements
 
-RocksDB
 
 ## Usage
 
@@ -90,7 +89,7 @@ co-occurrences are not overweighted.
 ues of x, so that frequent co-occurrences are
 not overweighted.
 
-Also according to the paper, one working function is 
+Also according to the paper [1](#ref1), one working function is 
 
 $f(x) =
 \begin{cases} 
@@ -117,8 +116,12 @@ separated pairs.
 
 ### Co-occurrence file generation
 
-We decided to use a database to do this.
-
+The cooccurrences are found by iterating through the corpus and updating the lookup table 
+on the indices of the words.  The window size is defined at compile time, as are the sizes of 
+the vocabulary and corpus.  We then shuffle and write the coocurrences to a binary file.  As 
+the cost function relies on all i,j pairs, only i,j pairs with relevant cooccurrences need to 
+be considered.  Thus, our training only needs to iterate through each cooccurrence set, allowing 
+us to shuffle all cooccurrences similar to the paper's original implementation.
 
 ## Sources
 
