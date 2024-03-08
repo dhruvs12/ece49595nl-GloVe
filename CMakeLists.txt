@@ -19,3 +19,7 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
 
+configure_file(
+    "${PROJECT_SOURCE_DIR}/freq_const.hpp.ini"
+    "${PROJECT_BINARY_DIR}/freq_const.hpp"
+)

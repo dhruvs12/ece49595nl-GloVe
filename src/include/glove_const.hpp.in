@@ -1,0 +1,6 @@
+#pragma once
+
+#define ETA @ETA@
+#define ALPHA @ALPHA@
+#define X_MAX @X_MAX@
+#define GRADIENT_CLIP @GRADIET_CLIP@

@@ -2,9 +2,13 @@
 #include <iostream>
 #include <string>
 #include <fstream>
-#include <cstdint>
 #include <algorithm>
 #include <vector>
+#include "include/freq_const.hpp"
+#include "include/glove_types.hpp"
+
+constexpr idx_t min_count = MIN_COUNT;
+constexpr idx_t max_size = MAX_SIZE;
 
 int main(int argc, char **argv) {
     if (argc != 4) {
@@ -12,7 +16,7 @@ int main(int argc, char **argv) {
         return EXIT_FAILURE;
     }
 
-    std::unordered_map<std::string, uint32_t> vocab;
+    std::unordered_map<std::string, idx_t> vocab;
 
     std::ifstream infile (argv[1]);
     
@@ -26,7 +30,7 @@ int main(int argc, char **argv) {
         vocab[word]++;
     }
 
-    std::vector<std::pair<std::string, uint32_t>> out_vector;
+    std::vector<std::pair<std::string, idx_t>> out_vector;
     std::copy(vocab.begin(), vocab.end(), std::back_inserter(out_vector));
 
     std::sort(out_vector.begin(), out_vector.end(), [](const auto &a, const auto &b) {
@@ -40,11 +44,13 @@ int main(int argc, char **argv) {
         return EXIT_FAILURE;
     }
 
-    uint32_t min_count = atoi(argv[3]);
-
+    idx_t i = 0;
     for (auto &[word, freq] : out_vector) {
-        if (freq >= min_count)
+        if (freq >= min_count) {
             outfile << word << " " << freq << "\n";
+            i++;
+            if (i >= max_size) break;
+        }
     }
     
     infile.close();

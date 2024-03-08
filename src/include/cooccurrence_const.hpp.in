@@ -1,0 +1,6 @@
+#pragma once
+
+#define CORPLEN @CORPLEN@
+#define VOCABLEN @VOCABLEN@
+#define LSIZE @LSIZE@
+#define SYMMETRIC @SYMMETRIC@

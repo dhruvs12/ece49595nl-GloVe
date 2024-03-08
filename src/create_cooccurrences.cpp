@@ -7,29 +7,16 @@
 #include <random>
 #include <string>
 #include <unordered_map>
+#include "include/cooccurrence_const.hpp"
 
 // Create vocabulary dictionary
 
-#define CORPLEN 22
-#define VOCABLEN 13
-
-#ifndef LSIZE
-#define LSIZE 3
-#endif
-
-#ifndef SYMMETRIC
-#define SYMMETRIC 1
-#endif
-
-constexpr int corplen = CORPLEN;
-constexpr int vocablen = VOCABLEN;
-constexpr int lsize = LSIZE;
+constexpr idx_t corplen = CORPLEN;
+constexpr idx_t vocablen = VOCABLEN;
+constexpr idx_t lsize = LSIZE;
 constexpr bool symmetric = SYMMETRIC;
 
-using cooccur_idx_t = uint32_t;
-using cooccur_key_t = std::pair<cooccur_idx_t, cooccur_idx_t>;
-using cooccur_value_t = long double;
-using cooccur_map_iter_t = std::pair<cooccur_key_t, cooccur_value_t>;
+
 
 bool create_index_map(std::unordered_map<std::string, cooccur_idx_t>& indices, std::string filename) {
     std::ifstream vocab_in_file(filename);

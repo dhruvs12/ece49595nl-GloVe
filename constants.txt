@@ -1,0 +1,41 @@
+FREQUENCIES/vocab building:
+I/O-
+input file
+output file
+
+PARAMETERS-
+max_size- int
+min_count- int
+
+
+COOCCURRENCES:
+I/O-
+input file
+vocab file
+output file
+
+PARAMETERS-
+vocab_size- int
+corpus_size- int
+
+distance_weighting- bool
+symmetric- bool
+window_size- int
+
+TRAINING:
+I/O-
+input corpus
+input vocab
+output vector
+output context vector
+output bias
+
+PARAMETERS-
+training_iterations- int
+num_threads- int
+vector_size- int
+
+eta- float
+alpha- float
+x-max- float
+gradient_clipping- float [-param, param] interval

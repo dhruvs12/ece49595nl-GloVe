@@ -1,0 +1,28 @@
+{
+    "filenames": {
+        "corpus_file": "testcorpus",
+        "vocab_file": "vocab.txt",
+        "cooccurrence_file": "cooccurrence.bin",
+        "vector_file": "vectors.txt",
+        "context_file": "context_file.txt",
+        "bias_file": "biases.txt"
+    },
+    "cooccurrence": {
+        "distance_weighting": true,
+        "symmetric": true,
+        "window_size": 3
+    },
+    "training": {
+        "runtime": {
+            "iterations": 5,
+            "num_threads": 8,
+            "vector_size": 15
+        },
+        "params": {
+            "eta": 0.05,
+            "alpha": 0.05,
+            "x-max": 5,
+            "gradient_clipping": 5      
+        }
+    }
+}

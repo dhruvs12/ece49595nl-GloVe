@@ -1,0 +1,2 @@
+#define MAX_SIZE @MAX_SIZE@
+#define MIN_COUNT @MIN_COUNT@
