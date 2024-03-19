@@ -1,6 +1,11 @@
 #pragma once
+#include "glove_types.hpp"
 
-#define ETA @ETA@
-#define ALPHA @ALPHA@
-#define X_MAX @X_MAX@
-#define GRADIENT_CLIP @GRADIET_CLIP@
+constexpr idx_t iterations = @ITERATIONS@;
+constexpr idx_t num_threads = @NUM_THREADS@;
+constexpr idx_t vector_size = @VECTOR_SIZE@;
+
+constexpr idx_t x_max = @X_MAX@;
+constexpr fp_t eta = @ETA@;
+constexpr fp_t alpha = @ALPHA@;
+constexpr fp_t gradient_clip = @GRADIENT_CLIP@;

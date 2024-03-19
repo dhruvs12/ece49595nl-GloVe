@@ -1,0 +1,5 @@
+#pragma once
+#include "glove_types.hpp"
+
+constexpr const idx_t corplen = @CORPLEN@;
+constexpr const idx_t vocablen = @VOCABLEN@;

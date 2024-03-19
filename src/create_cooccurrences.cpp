@@ -1,24 +1,20 @@
 #include <algorithm>
 #include <array>
 #include <cstdint>
+#include <format>
 #include <fstream>
 #include <iostream>
 #include <map>
 #include <random>
 #include <string>
 #include <unordered_map>
-#include "include/cooccurrence_const.hpp"
+#include "filenames.hpp"
+#include "cooccurrence_const.hpp"
+#include "training_sizes.hpp"
+#include "glove_types.hpp"
 
 // Create vocabulary dictionary
-
-constexpr idx_t corplen = CORPLEN;
-constexpr idx_t vocablen = VOCABLEN;
-constexpr idx_t lsize = LSIZE;
-constexpr bool symmetric = SYMMETRIC;
-
-
-
-bool create_index_map(std::unordered_map<std::string, cooccur_idx_t>& indices, std::string filename) {
+static bool create_index_map(std::unordered_map<std::string, idx_t>& indices, std::string filename) {
     std::ifstream vocab_in_file(filename);
     
     if (!vocab_in_file.is_open()) {
@@ -27,7 +23,7 @@ bool create_index_map(std::unordered_map<std::string, cooccur_idx_t>& indices, s
 
     std::string in_string;
     uint32_t freq;
-    cooccur_idx_t i = 0;
+    idx_t i = 0;
 
     while (vocab_in_file >> in_string >> freq) {
         indices[in_string] = i++;
@@ -37,7 +33,7 @@ bool create_index_map(std::unordered_map<std::string, cooccur_idx_t>& indices, s
     return true;
 }
 
-bool create_corpus(std::array<std::string, corplen> &corpus, std::string filename) {
+static bool create_corpus(std::array<std::string, corplen> &corpus, std::string filename) {
     std::ifstream corpus_in_file(filename);
     
     if (!corpus_in_file.is_open()) {
@@ -56,29 +52,24 @@ bool create_corpus(std::array<std::string, corplen> &corpus, std::string filenam
 }
 
 int main(int argc, char **argv) {
-    if (argc != 4) {
-        std::cerr << "USAGE: ./create_frequencies vocab.txt corpus.txt output_file.bin\n";
-        return EXIT_FAILURE;
-    }
+    std::unordered_map<std::string, idx_t> indices;
 
-    std::unordered_map<std::string, cooccur_idx_t> indices;
-
-    if (!create_index_map(indices, argv[1])) {
-        std::cerr << "ERROR: vocab.txt not opened. Exiting...\n";
+    if (!create_index_map(indices, vocab_file)) {
+        std::cerr << std::format("ERROR: {} not opened. Exiting...\n", vocab_file);
         return EXIT_FAILURE;
     }
 
     std::array<std::string, corplen> corpus;
 
-    if (!create_corpus(corpus, argv[2])) {
-        std::cerr << "ERROR: corpus.txt not opened. Exiting...\n";
+    if (!create_corpus(corpus, corpus_file)) {
+        std::cerr << std::format("ERROR: {} not opened. Exiting...\n", corpus_file);
         return EXIT_FAILURE;
     }
 
     std::map<cooccur_key_t, cooccur_value_t> cooccurrences;
 
     // Left include
-    cooccur_idx_t i_idx;
+    idx_t i_idx;
     for (int i = 0; i < lsize; i++) {
         if (indices.find(corpus[i]) != indices.end()) {
             i_idx = indices[corpus[i]];
@@ -113,9 +104,9 @@ int main(int argc, char **argv) {
     std::shuffle(shuffled.begin(), shuffled.end(), g);
 
     // Write to file
-    std::ofstream cooccurrence_out_file (argv[3], std::ios::binary);
+    std::ofstream cooccurrence_out_file (cooccurrence_file, std::ios::binary);
     if (!cooccurrence_out_file.is_open()) {
-        std::cerr << "ERROR: output_file.bin not opened. Exiting...\n";
+        std::cerr << std::format("ERROR: {} not opened. Exiting...\n", cooccurrence_file);
         return EXIT_FAILURE;
     }
 

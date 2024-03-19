@@ -7,9 +7,13 @@
         "context_file": "context_file.txt",
         "bias_file": "biases.txt"
     },
+    "frequencies": {
+        "min_count": 2, 
+        "max_size": 0
+    },
     "cooccurrence": {
-        "distance_weighting": true,
-        "symmetric": true,
+        "distance_weighting": "true",
+        "symmetric": "true",
         "window_size": 3
     },
     "training": {
@@ -21,7 +25,7 @@
         "params": {
             "eta": 0.05,
             "alpha": 0.05,
-            "x-max": 5,
+            "x_max": 5,
             "gradient_clipping": 5      
         }
     }

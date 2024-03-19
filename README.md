@@ -6,6 +6,20 @@ This repository is purely focused on implementation
 
 ## Usage
 
+To train-
+
+```
+mkdir -p build
+cmake ..
+cmake --build . --target=glove
+```
+
+The build system will load values from the config file and build the requested target.
+
+The targets `gen_frequencies`, `create_cooccurrences`, and `glove` can be specified during 
+the build.  Each target depends on the previous one and only the furthest target needs to 
+be specified.  The default value is `glove`.
+
 ## Procedure
 
 1. Preprocess dataset into space-separated list of tokens

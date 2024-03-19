@@ -1,0 +1,9 @@
+#pragma once
+#include <string>
+
+constexpr const char* corpus_file = "@CORPUS_FILE@";
+constexpr const char* vocab_file = "@VOCAB_FILE@";
+constexpr const char* cooccurrence_file = "@COOCCURRENCE_FILE@";
+constexpr const char* vector_file = "@VECTOR_FILE@";
+constexpr const char* context_file = "@CONTEXT_FILE@";
+constexpr const char* bias_file = "@BIAS_FILE@";

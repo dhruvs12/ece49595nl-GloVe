@@ -1,6 +1,6 @@
 #pragma once
+#include <glove_types.hpp>
 
-#define CORPLEN @CORPLEN@
-#define VOCABLEN @VOCABLEN@
-#define LSIZE @LSIZE@
-#define SYMMETRIC @SYMMETRIC@
+constexpr const idx_t lsize = @LSIZE@;
+constexpr const bool symmetric = @SYMMETRIC@;
+constexpr const bool distance_weighting = @DIST_WEIGHTING@;

@@ -4,29 +4,25 @@
 #include <fstream>
 #include <algorithm>
 #include <vector>
-#include "include/freq_const.hpp"
-#include "include/glove_types.hpp"
-
-constexpr idx_t min_count = MIN_COUNT;
-constexpr idx_t max_size = MAX_SIZE;
+#include <format>
+#include "freq_const.hpp"
+#include "glove_types.hpp"
+#include "filenames.hpp"
 
 int main(int argc, char **argv) {
-    if (argc != 4) {
-        std::cerr << "USAGE gen_frequencies corpus.txt output.txt min_count\n";
-        return EXIT_FAILURE;
-    }
-
     std::unordered_map<std::string, idx_t> vocab;
 
-    std::ifstream infile (argv[1]);
+    std::ifstream infile (corpus_file);
     
     if (!infile.is_open()) {
-        std::cerr << "Corpus not read properly. Exiting...\n";
+        std::cerr << std::format("ERROR: {} not read properly. Exiting...\n", corpus_file);
         return EXIT_FAILURE;
     }
 
     std::string word;
+    idx_t i = 0;
     while (infile >> word) {
+        i++;
         vocab[word]++;
     }
 
@@ -37,24 +33,26 @@ int main(int argc, char **argv) {
         return a.second > b.second;
     });
 
-    std::ofstream outfile (argv[2]);
+    std::ofstream outfile (vocab_file);
 
     if (!outfile.is_open()) {
-        std::cerr << "Output not opened properly. Exiting...\n";
+        std::cerr << std::format("ERROR: {} not opened properly. Exiting...\n", vocab_file);
         return EXIT_FAILURE;
     }
 
-    idx_t i = 0;
+    idx_t j = 0;
     for (auto &[word, freq] : out_vector) {
         if (freq >= min_count) {
             outfile << word << " " << freq << "\n";
-            i++;
-            if (i >= max_size) break;
+            j++;
+            if (max_size and j >= max_size) break;
         }
     }
     
     infile.close();
     outfile.close();
+
+    std::cout << std::format("{};{}", i, j);
 
     return EXIT_SUCCESS;
 }
