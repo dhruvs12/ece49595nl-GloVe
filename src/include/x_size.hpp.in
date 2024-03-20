@@ -1,0 +1,4 @@
+#pragma once
+#include "glove_types.hpp"
+
+constexpr const idx_t cooccur_size = @SIZES@;

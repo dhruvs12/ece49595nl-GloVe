@@ -14,20 +14,16 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -Werror -Wextra -Wpedantic")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -Werror -Wextra -Wpedantic -fsanitize=address")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -fomit-frame-pointer -march=native -flto=8 -funroll-loops")
 
 if(NOT CMAKE_BUILD_TYPE) 
-    set(CMAKE_BUILD_TYPE Release)
+    set(CMAKE_BUILD_TYPE Debug)
 endif()
 
-
 # Configure files
-file(
-    READ
-    config.json
-    CONFIG
-)
+file(MAKE_DIRECTORY ${CMAKE_SOURCE_DIR}/dist)
+file(READ config.json CONFIG)
 
 function(get_json target_variable usepath)
     string(
@@ -93,13 +89,13 @@ add_custom_target(
 )
 
 add_custom_command(
-    OUTPUT config_output
-    COMMAND ${CMAKE_COMMAND} -DINPUT_FILE="${SRC_INCLUDE_DIR}/training_sizes.hpp.in" -DOUTPUT_FILE="${CMAKE_BINARY_DIR}/training_sizes.hpp" -P "${CMAKE_SOURCE_DIR}/cmake/configure_file.cmake"
+    OUTPUT input_size_output
+    COMMAND ${CMAKE_COMMAND} -DTRAIN="OFF" -DINPUT_FILE="${SRC_INCLUDE_DIR}/training_sizes.hpp.in" -DOUTPUT_FILE="${CMAKE_BINARY_DIR}/training_sizes.hpp" -P "${CMAKE_SOURCE_DIR}/cmake/configure_file.cmake"
     DEPENDS gen_frequencies
-    COMMENT "Writing sizes..."
+    COMMENT "Writing input sizes..."
 )
 
-add_custom_target(size_const DEPENDS config_output)
+add_custom_target(size_const DEPENDS input_size_output)
 
 add_executable(
     cooccurrences 
@@ -112,10 +108,19 @@ add_dependencies(
 
 add_custom_target(
     create_cooccurrences
-    COMMAND cooccurrences
+    COMMAND cooccurrences > sizes
     DEPENDS cooccurrences
     COMMENT "Creating cooccurrences..."
 )
+
+add_custom_command(
+    OUTPUT train_size_output
+    COMMAND ${CMAKE_COMMAND} -DTRAIN="ON" -DINPUT_FILE="${SRC_INCLUDE_DIR}/x_size.hpp.in" -DOUTPUT_FILE="${CMAKE_BINARY_DIR}/x_size.hpp" -P "${CMAKE_SOURCE_DIR}/cmake/configure_file.cmake"
+    DEPENDS create_cooccurrences
+    COMMENT "Writing training size..."
+)
+
+add_custom_target(train_const DEPENDS train_size_output)
 
 add_executable(
     train
@@ -123,7 +128,7 @@ add_executable(
 )
 add_dependencies(
     train
-    create_cooccurrences
+    train_const
 )
 
 message(STATUS "${DIST_WEIGHTING} weighting")

@@ -34,5 +34,6 @@
 # VSCode
 .vscode/
 
-#build files
+# Output directories
 build/
+dist/

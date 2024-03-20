@@ -5,9 +5,11 @@
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <vector>
 #include <random>
 #include <string>
 #include <unordered_map>
+#include <boost/functional/hash.hpp>
 #include "filenames.hpp"
 #include "cooccurrence_const.hpp"
 #include "training_sizes.hpp"
@@ -33,7 +35,7 @@ static bool create_index_map(std::unordered_map<std::string, idx_t>& indices, st
     return true;
 }
 
-static bool create_corpus(std::array<std::string, corplen> &corpus, std::string filename) {
+static bool create_corpus(std::vector<std::string> &corpus, std::string filename) {
     std::ifstream corpus_in_file(filename);
     
     if (!corpus_in_file.is_open()) {
@@ -41,7 +43,7 @@ static bool create_corpus(std::array<std::string, corplen> &corpus, std::string 
     }
 
     std::string in_string;
-    uint32_t i = 0;
+    idx_t i = 0;
 
     while (corpus_in_file >> in_string) {
         corpus[i++] = in_string;
@@ -51,58 +53,69 @@ static bool create_corpus(std::array<std::string, corplen> &corpus, std::string 
     return true;
 }
 
-int main(int argc, char **argv) {
+int main() {
     std::unordered_map<std::string, idx_t> indices;
+    indices.reserve(vocablen);
 
     if (!create_index_map(indices, vocab_file)) {
         std::cerr << std::format("ERROR: {} not opened. Exiting...\n", vocab_file);
         return EXIT_FAILURE;
     }
 
-    std::array<std::string, corplen> corpus;
+    std::vector<std::string> corpus (corplen);
 
     if (!create_corpus(corpus, corpus_file)) {
         std::cerr << std::format("ERROR: {} not opened. Exiting...\n", corpus_file);
         return EXIT_FAILURE;
     }
+    
+    std::unordered_map<cooccur_key_t, cooccur_value_t, boost::hash<cooccur_key_t>> cooccurrences;
+    cooccurrences.reserve(vocablen * vocablen);
 
-    std::map<cooccur_key_t, cooccur_value_t> cooccurrences;
+    std::vector<idx_t> history (lsize);
+    decltype(indices)::iterator i_it;
+    idx_t place, i_idx, i = 0;
+    cooccur_value_t res;
 
-    // Left include
-    idx_t i_idx;
-    for (int i = 0; i < lsize; i++) {
-        if (indices.find(corpus[i]) != indices.end()) {
-            i_idx = indices[corpus[i]];
-            for (int j = 0; j < i; j++) {
-                if (indices.find(corpus[j]) != indices.end()) {
-                    cooccurrences[{i_idx, indices[corpus[j]]}] += (1. / (abs(i - j)));
-                    if (symmetric) cooccurrences[{indices[corpus[j]], i_idx}] += (1. / (abs(i - j)));
-                }
-            }
+    for (place = 0; place < corplen and i <= lsize; place++) {
+        if ((i_it = indices.find(corpus[place])) != indices.end()) {
+            i_idx = i_it->second;
+            idx_t j = i;
+            
+            if (i != 0) do {
+                j--;
+                res = (1. / (i - j));
+                cooccurrences[{history[j % lsize], i_idx}] += res;
+                if (symmetric) cooccurrences[{i_idx, history[j % lsize]}] += res;
+            } while (j != 0);
+
+            history[i % lsize] = i_idx;
+            i++;
         }
     }
 
-    // Inner
-    for (int i = lsize; i < corplen; i++) {
-        if (indices.find(corpus[i]) != indices.end()) {
-            i_idx = indices[corpus[i]];
-            for (int j = i - lsize; j < i; j++) {
-                if (indices.find(corpus[j]) != indices.end()) {
-                    cooccurrences[{i_idx, indices[corpus[j]]}] += (1. / (abs(i - j)));
-                    if (symmetric) cooccurrences[{indices[corpus[j]], i_idx}] += (1. / (abs(i - j)));
-                }
+    for (; place < corplen; place++) {
+        if ((i_it = indices.find(corpus[place])) != indices.end()) {
+            i_idx = i_it->second;
+            for (idx_t j = i - 1; j >= i - lsize; j--) {
+                res = (1. / (i - j));
+                cooccurrences[{history[j % lsize], i_idx}] += res;
+                if (symmetric) cooccurrences[{i_idx, history[j % lsize]}] += res;
             }
+
+            history[i % lsize] = i_idx;
+            i++;
         }
     }
 
     std::vector<cooccur_map_iter_t> shuffled;
     std::copy(cooccurrences.begin(), cooccurrences.end(), std::back_inserter(shuffled));
-
+    
     // Shuffle cooccurrences
-    std::random_device rd;
-    std::mt19937 g(rd());
+    static std::random_device rd;
+    static std::mt19937 g(rd());
     std::shuffle(shuffled.begin(), shuffled.end(), g);
-
+    
     // Write to file
     std::ofstream cooccurrence_out_file (cooccurrence_file, std::ios::binary);
     if (!cooccurrence_out_file.is_open()) {
@@ -114,10 +127,11 @@ int main(int argc, char **argv) {
         cooccurrence_out_file.write(reinterpret_cast<const char *>(&words.first), sizeof(words.first));
         cooccurrence_out_file.write(reinterpret_cast<const char *>(&words.second), sizeof(words.second));
         cooccurrence_out_file.write(reinterpret_cast<const char *>(&freq), sizeof(freq));
-    
     }
-
+    
     cooccurrence_out_file.close();
 
+    std::cout << shuffled.size();
+   
     return EXIT_SUCCESS;
 }

@@ -1,15 +1,15 @@
-#include <unordered_map>
+#include <algorithm>
+#include <format>
+#include <fstream>
 #include <iostream>
 #include <string>
-#include <fstream>
-#include <algorithm>
+#include <unordered_map>
 #include <vector>
-#include <format>
+#include "filenames.hpp"
 #include "freq_const.hpp"
 #include "glove_types.hpp"
-#include "filenames.hpp"
 
-int main(int argc, char **argv) {
+int main() {
     std::unordered_map<std::string, idx_t> vocab;
 
     std::ifstream infile (corpus_file);

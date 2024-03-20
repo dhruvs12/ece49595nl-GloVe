@@ -3,6 +3,7 @@ This repository is purely focused on implementation
 
 ## Requirements
 
+Boost
 
 ## Usage
 

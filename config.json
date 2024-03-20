@@ -1,11 +1,11 @@
 {
     "filenames": {
-        "corpus_file": "testcorpus",
-        "vocab_file": "vocab.txt",
-        "cooccurrence_file": "cooccurrence.bin",
-        "vector_file": "vectors.txt",
-        "context_file": "context_file.txt",
-        "bias_file": "biases.txt"
+        "corpus_file": "dist/text8",
+        "vocab_file": "dist/vocab.txt",
+        "cooccurrence_file": "dist/cooccurrence.bin",
+        "vector_file": "dist/vectors.txt",
+        "context_file": "dist/context_vectors.txt",
+        "bias_file": "dist/biases.txt"
     },
     "frequencies": {
         "min_count": 2, 
@@ -14,7 +14,7 @@
     "cooccurrence": {
         "distance_weighting": "true",
         "symmetric": "true",
-        "window_size": 3
+        "window_size": 14
     },
     "training": {
         "runtime": {
