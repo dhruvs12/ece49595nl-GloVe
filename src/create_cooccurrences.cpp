@@ -1,19 +1,17 @@
 #include <algorithm>
 #include <array>
-#include <cstdint>
+#include <boost/functional/hash.hpp>
 #include <format>
 #include <fstream>
 #include <iostream>
-#include <map>
-#include <vector>
 #include <random>
 #include <string>
 #include <unordered_map>
-#include <boost/functional/hash.hpp>
-#include "filenames.hpp"
+#include <vector>
 #include "cooccurrence_const.hpp"
-#include "training_sizes.hpp"
+#include "filenames.hpp"
 #include "glove_types.hpp"
+#include "training_sizes.hpp"
 
 // Create vocabulary dictionary
 static bool create_index_map(std::unordered_map<std::string, idx_t>& indices, std::string filename) {
@@ -24,8 +22,7 @@ static bool create_index_map(std::unordered_map<std::string, idx_t>& indices, st
     }
 
     std::string in_string;
-    uint32_t freq;
-    idx_t i = 0;
+    idx_t i = 0, freq;
 
     while (vocab_in_file >> in_string >> freq) {
         indices[in_string] = i++;
@@ -77,6 +74,7 @@ int main() {
     idx_t place, i_idx, i = 0;
     cooccur_value_t res;
 
+    // covering filling history and i == lsize case (compared with zero)
     for (place = 0; place < corplen and i <= lsize; place++) {
         if ((i_it = indices.find(corpus[place])) != indices.end()) {
             i_idx = i_it->second;
@@ -94,6 +92,7 @@ int main() {
         }
     }
 
+    // Rest of cooccurrences
     for (; place < corplen; place++) {
         if ((i_it = indices.find(corpus[place])) != indices.end()) {
             i_idx = i_it->second;
@@ -108,6 +107,7 @@ int main() {
         }
     }
 
+    // Copy map to vector
     std::vector<cooccur_map_iter_t> shuffled;
     std::copy(cooccurrences.begin(), cooccurrences.end(), std::back_inserter(shuffled));
     

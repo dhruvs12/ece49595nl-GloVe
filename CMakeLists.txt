@@ -21,6 +21,9 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug)
 endif()
 
+# Find linked library tbb
+find_package(TBB REQUIRED)
+
 # Configure files
 file(MAKE_DIRECTORY ${CMAKE_SOURCE_DIR}/dist)
 file(READ config.json CONFIG)
@@ -76,10 +79,7 @@ include_directories(${CMAKE_BINARY_DIR})
 include_directories("${CMAKE_SOURCE_DIR}/src")
 
 # Generate frequencies
-add_executable(
-    frequencies 
-    src/gen_frequencies.cpp
-)
+add_executable(frequencies src/gen_frequencies.cpp)
 
 add_custom_target(
     gen_frequencies
@@ -96,15 +96,8 @@ add_custom_command(
 )
 
 add_custom_target(size_const DEPENDS input_size_output)
-
-add_executable(
-    cooccurrences 
-    src/create_cooccurrences.cpp
-)
-add_dependencies(
-    cooccurrences
-    size_const
-)
+add_executable(cooccurrences src/create_cooccurrences.cpp)
+add_dependencies(cooccurrences size_const)
 
 add_custom_target(
     create_cooccurrences
@@ -119,17 +112,11 @@ add_custom_command(
     DEPENDS create_cooccurrences
     COMMENT "Writing training size..."
 )
-
 add_custom_target(train_const DEPENDS train_size_output)
 
-add_executable(
-    train
-    src/glove.cpp
-)
-add_dependencies(
-    train
-    train_const
-)
+add_executable(train src/glove.cpp)
+add_dependencies(train train_const)
+target_link_libraries(train PRIVATE TBB::tbb atomic)
 
 message(STATUS "${DIST_WEIGHTING} weighting")
 

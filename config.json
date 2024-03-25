@@ -1,6 +1,6 @@
 {
     "filenames": {
-        "corpus_file": "dist/text8",
+        "corpus_file": "dist/testcorpus",
         "vocab_file": "dist/vocab.txt",
         "cooccurrence_file": "dist/cooccurrence.bin",
         "vector_file": "dist/vectors.txt",
@@ -14,18 +14,18 @@
     "cooccurrence": {
         "distance_weighting": "true",
         "symmetric": "true",
-        "window_size": 14
+        "window_size": 3
     },
     "training": {
         "runtime": {
-            "iterations": 5,
+            "iterations": 100,
             "num_threads": 8,
-            "vector_size": 15
+            "vector_size": 3
         },
         "params": {
             "eta": 0.05,
-            "alpha": 0.05,
-            "x_max": 5,
+            "alpha": 0.75,
+            "x_max": 10,
             "gradient_clipping": 5      
         }
     }
