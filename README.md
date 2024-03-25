@@ -66,12 +66,12 @@ not overweighted.
 
 Also according to the paper [1](#ref1), one working function is 
 
-$f(x) =
+$`f(x) =
 \begin{cases} 
    (x / x_{max})^\alpha & \text{if } x < x_{max} \\
    1 & \text{otherwise}
   \end{cases}
-$
+`$
 
 Given a known $x_{max}$ and $0 < \alpha < 1$.
 
@@ -85,10 +85,10 @@ We first identify that our cost function matches the form
 $`f(x) = \sum\limits_{e \in E} f_e (x_e)`$
 where $E$ is the set $`\{i,j \in \N \mid X_{i,j} > 0\}`$.
 
-In order to perform the algorithm, we sample $`e \in E`$ randomly and reevaluate $w_i$, 
-$\tilde{w}_j$, $b_i$, and $\tilde{b}_j$ as $x_v \leftarrow \gamma G_{ev}(x_e)$ where 
-$x_v$ is each term in our vectors and $\gamma$ is our learning rate.  In the GloVe 
-cost function, $G_e(x_e)$ is the partial derivative of $J$ with respect to each term.
+In order to perform the algorithm, we sample $`e \in E`$ randomly and reevaluate $`w_i`$, 
+$`\tilde{w}_j`$, $`b_i`$, and $`\tilde{b}_j`$ as $`x_v \leftarrow \gamma G_{ev}(x_e)`$ where 
+$`x_v`$ is each term in our vectors and $`\gamma`$ is our learning rate.  In the GloVe 
+cost function, $`G_e(x_e)`$ is the partial derivative of $J$ with respect to each term.
 
 $`w_i \leftarrow w_i - \gamma \frac{\partial J}{\partial w_i} = 
 w_i - \gamma 2f(X_{ij})(w_i^T\tilde{w}_j + b_i + \tilde{b}_j - log(X_{ij}))\tilde{w}_j`$
