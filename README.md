@@ -3,7 +3,8 @@ This repository is purely focused on implementation
 
 ## Requirements
 
-Boost
+* Boost
+* TBB
 
 ## Usage
 
@@ -105,7 +106,7 @@ b_j - \gamma 2f(X_{ij})(w_i^T\tilde{w}_j + b_i + \tilde{b}_j - log(X_{ij}))`$
 The algorithm also requires Lipschitz continuous differentiability of $f$, which we have
 assuming that our function $f$ inside the cost function is differentiable, and given that
 $X_{ij}$ is bounded.  It also requires that $f$ is strongly convex, which we cannot
-guaruntee given the non-linearity of the $f$ in the cost function.  This method
+guarantee given the non-linearity of the $f$ in the cost function.  This method
 may not reach a global minimum, but our terms should descend along the gradient regardless.
 
 ### Learning rate adjustment

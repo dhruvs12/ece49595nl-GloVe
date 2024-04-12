@@ -2,10 +2,9 @@
 #include "glove_types.hpp"
 
 constexpr idx_t iterations = @ITERATIONS@;
-constexpr idx_t num_threads = @NUM_THREADS@;
 constexpr idx_t vector_size = @VECTOR_SIZE@;
 
 constexpr idx_t x_max = @X_MAX@;
-constexpr fp_t eta = @ETA@;
+fp_t eta = @ETA@;
 constexpr fp_t alpha = @ALPHA@;
-constexpr fp_t gradient_clip = @GRADIENT_CLIP@;
+fp_t gradient_clip = @GRADIENT_CLIP@;

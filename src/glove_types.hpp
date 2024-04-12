@@ -2,10 +2,11 @@
 #include <cstdint>
 
 using idx_t = uint32_t;
+using fp_t = double;
+
 using cooccur_key_t = std::pair<idx_t, idx_t>;
-using cooccur_value_t = long double;
+using cooccur_value_t = fp_t;
 using cooccur_map_iter_t = std::pair<cooccur_key_t, cooccur_value_t>;
-using fp_t = long double;
 
 typedef struct _cooccur_t {
     idx_t token1;
