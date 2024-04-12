@@ -15,10 +15,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -Werror -Wextra -Wpedantic -fsanitize=address")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -fomit-frame-pointer -march=native -flto=8 -funroll-loops")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -fomit-frame-pointer -march=native -flto -funroll-loops")
 
 if(NOT CMAKE_BUILD_TYPE) 
-    set(CMAKE_BUILD_TYPE Debug)
+    set(CMAKE_BUILD_TYPE Release)
 endif()
 
 # Find linked library tbb
@@ -64,7 +64,6 @@ get_json(X_MAX OFF training params x_max)
 get_json(GRADIENT_CLIP OFF training params gradient_clipping)
 
 get_json(ITERATIONS OFF training runtime iterations)
-get_json(NUM_THREADS OFF training runtime num_threads)
 get_json(VECTOR_SIZE OFF training runtime vector_size)
 
 set(SRC_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/src/include")
