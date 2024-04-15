@@ -139,6 +139,38 @@ int main() {
         std::cout << std::format("Completed iteration {} of {}, took {} seconds. Total cost: {}\n", epoch, iterations, elapsed_time / 1000., total_cost.load() / X_ij.size());
     }
 
-    // Output handling remains the same
+    std::ofstream vector_out_file(vector_file);
+    if (not_open(vector_out_file, vector_file)) return EXIT_FAILURE;
+
+    for (idx_t i = 0; i < vocablen; i++) {
+        vector_out_file << vocab[i] << " ";
+        for (idx_t j = 0; j < vector_size; j++) {
+            vector_out_file << w_i[(i * vector_size) + j].load(std::memory_order_relaxed) << " ";
+        }
+        vector_out_file << std::endl;
+    }
+    vector_out_file.close();
+
+    std::ofstream context_out_file(context_file);
+    if (not_open(context_out_file, context_file)) return EXIT_FAILURE;
+
+    for (idx_t i = 0; i < vocablen; i++) {
+        context_out_file << vocab[i] << " ";
+        for (idx_t j = 0; j < vector_size; j++) {
+            context_out_file << w_j[(i * vector_size) + j].load(std::memory_order_relaxed) << " ";
+        }
+        context_out_file << std::endl;
+    }
+    context_out_file.close();
+
+    std::ofstream bias_out_file(bias_file);
+    if (not_open(bias_out_file, bias_file)) return EXIT_FAILURE;
+
+    for (idx_t i = 0; i < vocablen; i++) {
+        bias_out_file << vocab[i] << " " << b_i[i].load(std::memory_order_relaxed) << " " << b_j[i].load(std::memory_order_relaxed) << std::endl;
+    }
+    bias_out_file.close();
+
+    return EXIT_SUCCESS;  
 }
 
