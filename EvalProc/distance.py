@@ -1,75 +1,67 @@
 import argparse
 import numpy as np
-import sys
 
-def generate():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--vocab_file', default='vocab.txt', type=str)
-    parser.add_argument('--vectors_file', default='vectors.txt', type=str)
+def load_word_vectors():
+    parser = argparse.ArgumentParser(description="Load word vectors from files.")
+    parser.add_argument('--vocab_path', default='vocab.txt', help='Path to vocabulary file.', type=str)
+    parser.add_argument('--vector_path', default='vectors.txt', help='Path to vectors file.', type=str)
     args = parser.parse_args()
 
-    with open(args.vocab_file, 'r') as f:
-        words = [x.rstrip().split(' ')[0] for x in f.readlines()]
-    with open(args.vectors_file, 'r') as f:
-        vectors = {}
-        for line in f:
-            vals = line.rstrip().split(' ')
-            vectors[vals[0]] = [float(x) for x in vals[1:]]
+    with open(args.vocab_path, 'r') as vocab_file:
+        vocabulary = {line.strip().split()[0]: idx for idx, line in enumerate(vocab_file)}
 
-    vocab_size = len(words)
-    vocab = {w: idx for idx, w in enumerate(words)}
-    ivocab = {idx: w for idx, w in enumerate(words)}
+    vector_dimensions = None
+    vector_matrix = {}
+    with open(args.vector_path, 'r') as vector_file:
+        for line in vector_file:
+            parts = line.strip().split()
+            vector = np.array([float(num) for num in parts[1:]])
+            if vector_dimensions is None:
+                vector_dimensions = len(vector)
+            vector_matrix[parts[0]] = vector
 
-    vector_dim = len(vectors[ivocab[0]])
-    W = np.zeros((vocab_size, vector_dim))
-    for word, v in vectors.items():
-        if word == '<unk>':
-            continue
-        W[vocab[word], :] = v
+    embedding_matrix = np.zeros((len(vocabulary), vector_dimensions))
+    for word, index in vocabulary.items():
+        if word in vector_matrix:
+            embedding_matrix[index, :] = vector_matrix[word]
 
-    # normalize each word vector to unit variance
-    W_norm = np.zeros(W.shape)
-    d = (np.sum(W ** 2, 1) ** (0.5))
-    W_norm = (W.T / d).T
-    return (W_norm, vocab, ivocab)
+    # Normalize the word vectors
+    norms = np.linalg.norm(embedding_matrix, axis=1)
+    embedding_matrix = embedding_matrix / norms[:, None]
 
+    index_to_word = {index: word for word, index in vocabulary.items()}
+    return embedding_matrix, vocabulary, index_to_word
 
-def distance(W, vocab, ivocab, input_term):
-    for idx, term in enumerate(input_term.split(' ')):
-        if term in vocab:
-            print('Word: %s  Position in vocabulary: %i' % (term, vocab[term]))
-            if idx == 0:
-                vec_result = np.copy(W[vocab[term], :])
-            else:
-                vec_result += W[vocab[term], :]
-        else:
-            print('Word: %s  Out of dictionary!\n' % term)
-            return
+def compute_similarity(embedding_matrix, vocabulary, index_to_word, query, top_n=100):
+    terms = query.split()
+    if any(term not in vocabulary for term in terms):
+        print(f"Some words in the query '{query}' are not in the dictionary.")
+        return
 
-    vec_norm = np.zeros(vec_result.shape)
-    d = (np.sum(vec_result ** 2,) ** (0.5))
-    vec_norm = (vec_result.T / d).T
+    # Compute the composite query vector
+    query_indices = [vocabulary[term] for term in terms]
+    query_vector = np.sum(embedding_matrix[query_indices, :], axis=0)
+    query_norm = np.linalg.norm(query_vector)
+    normalized_query_vector = query_vector / query_norm
 
-    dist = np.dot(W, vec_norm.T)
+    # Calculate cosine similarity
+    similarities = embedding_matrix.dot(normalized_query_vector)
+    for idx in query_indices:
+        similarities[idx] = -np.inf  # exclude the query words themselves
 
-    for term in input_term.split(' '):
-        index = vocab[term]
-        dist[index] = -np.Inf
+    top_indices = np.argsort(-similarities)[:top_n]
+    print("\nWord\t\tCosine Similarity\n")
+    print("---------------------------------\n")
+    for idx in top_indices:
+        print(f"{index_to_word[idx]}\t\t{similarities[idx]:.6f}")
 
-    a = np.argsort(-dist)[:N]
-
-    print("\n                               Word       Cosine distance\n")
-    print("---------------------------------------------------------\n")
-    for x in a:
-        print("%35s\t\t%f\n" % (ivocab[x], dist[x]))
-
+def main():
+    embedding_matrix, vocabulary, index_to_word = load_word_vectors()
+    while True:
+        user_input = input("Enter a word or phrase ('EXIT' to quit): ")
+        if user_input.lower() == 'exit':
+            break
+        compute_similarity(embedding_matrix, vocabulary, index_to_word, user_input)
 
 if __name__ == "__main__":
-    N = 100 # number of closest words that will be shown
-    W, vocab, ivocab = generate()
-    while True:
-        input_term = input("\nEnter word or sentence (EXIT to break): ")
-        if input_term == 'EXIT':
-            break
-        else:
-            distance(W, vocab, ivocab, input_term)
+    main()

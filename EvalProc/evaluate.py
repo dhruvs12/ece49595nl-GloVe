@@ -1,115 +1,98 @@
 import argparse
 import numpy as np
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--vocab_file', default='vocab.txt', type=str)
-    parser.add_argument('--vectors_file', default='vectors.txt', type=str)
-    args = parser.parse_args()
+def load_and_process_data(args):
+    """Loads and processes vocabulary and vectors from specified files."""
+    with open(args.vocab_file, 'r') as vocab_file:
+        words = [line.strip().split()[0] for line in vocab_file]
+    
+    vectors = {}
+    with open(args.vectors_file, 'r') as vector_file:
+        for line in vector_file:
+            parts = line.strip().split()
+            vectors[parts[0]] = [float(num) for num in parts[1:]]
 
-    with open(args.vocab_file, 'r') as f:
-        words = [x.rstrip().split(' ')[0] for x in f.readlines()]
-    with open(args.vectors_file, 'r') as f:
-        vectors = {}
-        for line in f:
-            vals = line.rstrip().split(' ')
-            vectors[vals[0]] = [float(x) for x in vals[1:]]
+    return words, vectors
 
-    vocab_size = len(words)
-    vocab = {w: idx for idx, w in enumerate(words)}
-    ivocab = {idx: w for idx, w in enumerate(words)}
+def create_normalized_embeddings(words, vectors):
+    """Creates and normalizes the embeddings."""
+    vocab = {word: index for index, word in enumerate(words)}
+    reverse_vocab = {index: word for index, word in enumerate(words)}
 
-    vector_dim = len(vectors[ivocab[0]])
-    W = np.zeros((vocab_size, vector_dim))
-    for word, v in vectors.items():
-        if word == '<unk>':
-            continue
-        W[vocab[word], :] = v
+    dim = len(vectors[next(iter(vectors))])
+    embeddings = np.zeros((len(vocab), dim))
+    for word, vector in vectors.items():
+        if word in vocab:
+            embeddings[vocab[word]] = vector
 
-    # normalize each word vector to unit length
-    W_norm = np.zeros(W.shape)
-    d = (np.sum(W ** 2, 1) ** (0.5))
-    W_norm = (W.T / d).T
-    evaluate_vectors(W_norm, vocab)
+    # Normalize embeddings to unit length
+    norms = np.linalg.norm(embeddings, axis=1)
+    normalized_embeddings = embeddings / norms[:, np.newaxis]
 
-def evaluate_vectors(W, vocab):
-    """Evaluate the trained word vectors on a variety of tasks"""
+    return normalized_embeddings, vocab, reverse_vocab
 
-    filenames = [
+def evaluate_embeddings(embeddings, vocab, reverse_vocab):
+    """Evaluates the embeddings on predefined tasks."""
+    tasks = [
         'capital-common-countries.txt', 'capital-world.txt', 'currency.txt',
         'city-in-state.txt', 'family.txt', 'gram1-adjective-to-adverb.txt',
         'gram2-opposite.txt', 'gram3-comparative.txt', 'gram4-superlative.txt',
         'gram5-present-participle.txt', 'gram6-nationality-adjective.txt',
-        'gram7-past-tense.txt', 'gram8-plural.txt', 'gram9-plural-verbs.txt',
-        ]
-    prefix = './eval/question-data/'
+        'gram7-past-tense.txt', 'gram8-plural.txt', 'gram9-plural-verbs.txt'
+    ]
+    data_dir = './eval/question-data/'
 
-    # to avoid memory overflow, could be increased/decreased
-    # depending on system and vocab size
-    split_size = 100
+    split_size = 100  # Adjust based on memory capacity
 
-    correct_sem = 0; # count correct semantic questions
-    correct_syn = 0; # count correct syntactic questions
-    correct_tot = 0 # count correct questions
-    count_sem = 0; # count all semantic questions
-    count_syn = 0; # count all syntactic questions
-    count_tot = 0 # count all questions
-    full_count = 0 # count all questions, including those with unknown words
+    results = {
+        'semantic': {'correct': 0, 'total': 0},
+        'syntactic': {'correct': 0, 'total': 0},
+        'overall': {'correct': 0, 'total': 0, 'seen': 0}
+    }
 
-    for i in range(len(filenames)):
-        with open('%s/%s' % (prefix, filenames[i]), 'r') as f:
-            full_data = [line.rstrip().split(' ') for line in f]
-            full_count += len(full_data)
-            data = [x for x in full_data if all(word in vocab for word in x)]
+    for task_file in tasks:
+        with open(f'{data_dir}{task_file}', 'r') as file:
+            full_data = [line.strip().split() for line in file]
+            results['overall']['seen'] += len(full_data)
+            valid_data = [x for x in full_data if all(word in vocab for word in x)]
 
-        if len(data) == 0:
-            print("ERROR: no lines of vocab kept for %s !" % filenames[i])
-            print("Example missing line:", full_data[0])
+        if not valid_data:
+            print(f"ERROR: No valid vocab found for {task_file}!")
             continue
 
-        indices = np.array([[vocab[word] for word in row] for row in data])
-        ind1, ind2, ind3, ind4 = indices.T
+        indices = np.array([[vocab[word] for word in row] for row in valid_data])
+        pred_vecs = embeddings[indices[:, 1]] - embeddings[indices[:, 0]] + embeddings[indices[:, 2]]
+        predictions = np.argmax(np.dot(embeddings, pred_vecs.T), axis=0)
 
-        predictions = np.zeros((len(indices),))
-        num_iter = int(np.ceil(len(indices) / float(split_size)))
-        for j in range(num_iter):
-            subset = np.arange(j*split_size, min((j + 1)*split_size, len(ind1)))
+        correct_answers = indices[:, 3] == predictions
+        correct_count = np.sum(correct_answers)
+        total_count = len(correct_answers)
+        results['overall']['total'] += total_count
+        results['overall']['correct'] += correct_count
 
-            pred_vec = (W[ind2[subset], :] - W[ind1[subset], :]
-                +  W[ind3[subset], :])
-            #cosine similarity if input W has been normalized
-            dist = np.dot(W, pred_vec.T)
-
-            for k in range(len(subset)):
-                dist[ind1[subset[k]], k] = -np.Inf
-                dist[ind2[subset[k]], k] = -np.Inf
-                dist[ind3[subset[k]], k] = -np.Inf
-
-            # predicted word index
-            predictions[subset] = np.argmax(dist, 0).flatten()
-
-        val = (ind4 == predictions) # correct predictions
-        count_tot = count_tot + len(ind1)
-        correct_tot = correct_tot + sum(val)
-        if i < 5:
-            count_sem = count_sem + len(ind1)
-            correct_sem = correct_sem + sum(val)
+        if tasks.index(task_file) < 5:
+            results['semantic']['total'] += total_count
+            results['semantic']['correct'] += correct_count
         else:
-            count_syn = count_syn + len(ind1)
-            correct_syn = correct_syn + sum(val)
+            results['syntactic']['total'] += total_count
+            results['syntactic']['correct'] += correct_count
 
-        print("%s:" % filenames[i])
-        print('ACCURACY TOP1: %.2f%% (%d/%d)' %
-            (np.mean(val) * 100, np.sum(val), len(val)))
+        print(f"{task_file}: ACCURACY TOP1: {100 * correct_count / total_count:.2f}% ({correct_count}/{total_count})")
 
-    print('Questions seen/total: %.2f%% (%d/%d)' %
-        (100 * count_tot / float(full_count), count_tot, full_count))
-    print('Semantic accuracy: %.2f%%  (%i/%i)' %
-        (100 * correct_sem / float(count_sem), correct_sem, count_sem))
-    print('Syntactic accuracy: %.2f%%  (%i/%i)' %
-        (100 * correct_syn / float(count_syn), correct_syn, count_syn))
-    print('Total accuracy: %.2f%%  (%i/%i)' % (100 * correct_tot / float(count_tot), correct_tot, count_tot))
+    print(f"Questions seen/total: {100 * results['overall']['total'] / results['overall']['seen']:.2f}%")
+    print(f"Semantic accuracy: {100 * results['semantic']['correct'] / results['semantic']['total']:.2f}%")
+    print(f"Syntactic accuracy: {100 * results['syntactic']['correct'] / results['syntactic']['total']:.2f}%")
+    print(f"Total accuracy: {100 * results['overall']['correct'] / results['overall']['total']:.2f}%")
 
+def main():
+    parser = argparse.ArgumentParser(description="Evaluate word vector embeddings.")
+    parser.add_argument('--vocab_file', type=str, default='vocab.txt', help='File containing vocabulary.')
+    parser.add_argument('--vectors_file', type=str, default='vectors.txt', help='File containing word vectors.')
+    args = parser.parse_args()
+
+    words, vectors = load_and_process_data(args)
+    embeddings, vocab, reverse_vocab = create_normalized_embeddings(words, vectors)
+    evaluate_embeddings(embeddings, vocab, reverse_vocab)
 
 if __name__ == "__main__":
     main()

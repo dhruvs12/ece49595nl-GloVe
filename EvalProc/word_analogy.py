@@ -1,79 +1,75 @@
 import argparse
 import numpy as np
+import sys
 
-def generate():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--vocab_file', default='vocab.txt', type=str)
-    parser.add_argument('--vectors_file', default='vectors.txt', type=str)
+def load_data(vocab_path='vocab.txt', vectors_path='vectors.txt'):
+    """Loads vocabulary and vectors from files."""
+    with open(vocab_path, 'r') as vf:
+        words = [line.strip().split(' ')[0] for line in vf]
+
+    vectors = {}
+    with open(vectors_path, 'r') as vf:
+        for line in vf:
+            parts = line.strip().split()
+            vectors[parts[0]] = np.array([float(val) for val in parts[1:]])
+
+    return words, vectors
+
+def prepare_embeddings(words, vectors):
+    """Prepare the word vectors matrix and vocab dictionaries."""
+    vocab = {word: index for index, word in enumerate(words)}
+    reverse_vocab = {index: word for index, word in enumerate(words)}
+    dim = len(vectors[next(iter(vectors))])
+    embedding_matrix = np.zeros((len(vocab), dim))
+
+    for word, vec in vectors.items():
+        if word in vocab:
+            embedding_matrix[vocab[word]] = vec
+
+    # Normalize the vectors
+    norms = np.linalg.norm(embedding_matrix, axis=1)
+    embedding_matrix = embedding_matrix / norms[:, np.newaxis]
+
+    return embedding_matrix, vocab, reverse_vocab
+
+def find_closest_embeddings(embedding_matrix, vocab, reverse_vocab, query, top_n=10):
+    """Find the top_n closest terms in the embedding space for the given query."""
+    if query not in vocab:
+        print(f'Word: {query} not found in the dictionary.')
+        return
+
+    query_idx = vocab[query]
+    query_vec = embedding_matrix[query_idx]
+
+    # Compute cosine similarity
+    similarity = np.dot(embedding_matrix, query_vec)
+    # Ignore the query word itself
+    similarity[query_idx] = -1
+
+    # Fetch top N indices sorted by similarity
+    top_indices = np.argsort(similarity)[::-1][:top_n]
+    results = [(reverse_vocab[i], similarity[i]) for i in top_indices]
+
+    print("\nWord\t\tCosine Similarity\n")
+    print("----------------------------------\n")
+    for word, score in results:
+        print(f"{word}\t\t{score:.6f}\n")
+
+def main():
+    parser = argparse.ArgumentParser(description="Process some integers.")
+    parser.add_argument('--vocab_file', default='vocab.txt', type=str, help='Path to vocabulary file.')
+    parser.add_argument('--vectors_file', default='vectors.txt', type=str, help='Path to vectors file.')
     args = parser.parse_args()
 
-    with open(args.vocab_file, 'r') as f:
-        words = [x.rstrip().split(' ')[0] for x in f.readlines()]
-    with open(args.vectors_file, 'r') as f:
-        vectors = {}
-        for line in f:
-            vals = line.rstrip().split(' ')
-            vectors[vals[0]] = [float(x) for x in vals[1:]]
+    words, vectors = load_data(args.vocab_file, args.vectors_file)
+    W, vocab, ivocab = prepare_embeddings(words, vectors)
 
-    vocab_size = len(words)
-    vocab = {w: idx for idx, w in enumerate(words)}
-    ivocab = {idx: w for idx, w in enumerate(words)}
-
-    vector_dim = len(vectors[ivocab[0]])
-    W = np.zeros((vocab_size, vector_dim))
-    for word, v in vectors.items():
-        if word == '<unk>':
-            continue
-        W[vocab[word], :] = v
-
-    # normalize each word vector to unit variance
-    W_norm = np.zeros(W.shape)
-    d = (np.sum(W ** 2, 1) ** (0.5))
-    W_norm = (W.T / d).T
-    return (W_norm, vocab, ivocab)
-
-
-def distance(W, vocab, ivocab, input_term):
-    vecs = {}
-    if len(input_term.split(' ')) < 3:
-        print("Only %i words were entered.. three words are needed at the input to perform the calculation\n" % len(input_term.split(' ')))
-        return 
-    else:
-        for idx, term in enumerate(input_term.split(' ')):
-            if term in vocab:
-                print('Word: %s  Position in vocabulary: %i' % (term, vocab[term]))
-                vecs[idx] = W[vocab[term], :] 
-            else:
-                print('Word: %s  Out of dictionary!\n' % term)
-                return
-
-        vec_result = vecs[1] - vecs[0] + vecs[2]
-        
-        vec_norm = np.zeros(vec_result.shape)
-        d = (np.sum(vec_result ** 2,) ** (0.5))
-        vec_norm = (vec_result.T / d).T
-
-        dist = np.dot(W, vec_norm.T)
-
-        for term in input_term.split(' '):
-            index = vocab[term]
-            dist[index] = -np.Inf
-
-        a = np.argsort(-dist)[:N]
-
-        print("\n                               Word       Cosine distance\n")
-        print("---------------------------------------------------------\n")
-        for x in a:
-            print("%35s\t\t%f\n" % (ivocab[x], dist[x]))
-
+    while True:
+        term = input("\nEnter a word or EXIT to stop: ")
+        if term.lower() == 'exit':
+            break
+        find_closest_embeddings(W, vocab, ivocab, term, top_n=100)
 
 if __name__ == "__main__":
-    N = 100;          # number of closest words that will be shown
-    W, vocab, ivocab = generate()
-    while True:
-        input_term = input("\nEnter three words (EXIT to break): ")
-        if input_term == 'EXIT':
-            break
-        else:
-            distance(W, vocab, ivocab, input_term)
+    main()
 
