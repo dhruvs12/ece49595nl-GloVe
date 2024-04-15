@@ -40,7 +40,7 @@ def evaluate_embeddings(embeddings, vocab, reverse_vocab):
         'gram5-present-participle.txt', 'gram6-nationality-adjective.txt',
         'gram7-past-tense.txt', 'gram8-plural.txt', 'gram9-plural-verbs.txt'
     ]
-    data_dir = './eval/question-data/'
+    data_dir = './EvalProc/DataQ/'
 
     split_size = 100  # Adjust based on memory capacity
 
