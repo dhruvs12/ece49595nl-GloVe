@@ -1,5 +1,5 @@
 # Build settings
-cmake_minimum_required(VERSION 3.27)
+cmake_minimum_required(VERSION 3.25)
 
 project(GloVe LANGUAGES CXX VERSION 0.1)
 
@@ -10,7 +10,7 @@ write_basic_package_version_file(
     COMPATIBILITY AnyNewerVersion
 )
 
-set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
