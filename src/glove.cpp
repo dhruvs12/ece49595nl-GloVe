@@ -16,7 +16,7 @@
 #include "training_sizes.hpp"
 #include "x_size.hpp"
 
-static inline auto f = [](const fp_t &x) -> fp_t noexcept {
+static inline auto f = [](const fp_t &x) noexcept -> fp_t {
     return (x < x_max) 
         ? pow(x / x_max, alpha)
         : 1.;
